@@ -5,22 +5,14 @@ from .batch import BatchManager
 from .configs import *
 from .model import pretrian_model
 
-def _validate(session, batch_manager, models):
-    valid_rmse = session.run(
-        models['rmse'],
-        feed_dict={
-            models['u']: batch_manager.valid_data[:, 0],
-            models['i']: batch_manager.valid_data[:, 1],
-            models['r']: batch_manager.valid_data[:, 2]
-        })
+def _validate(batch_manager, model):
+    valid_rmse = model(batch_manager.valid_data[:,0],
+                       batch_manager.valid_data[:,1],
+                       batch_manager.valid_data[:,2])
 
-    test_rmse = session.run(
-        models['rmse'],
-        feed_dict={
-            models['u']: batch_manager.test_data[:, 0],
-            models['i']: batch_manager.test_data[:, 1],
-            models['r']: batch_manager.test_data[:, 2]
-        })
+    test_rmse = model(batch_manager.test_data[:,0],
+                       batch_manager.test_data[:,1],
+                       batch_manager.test_data[:,2])
 
     return valid_rmse, test_rmse
 

@@ -15,6 +15,7 @@ class BatchManager:
                 dataset_manager.get_valid_data()
             ],
             axis=0)
+        self.valid_data = dataset_manager.get_valid_data
         self.test_data = dataset_manager.get_test_data()
 
         self.n_user = dataset_manager.get_n_user()
