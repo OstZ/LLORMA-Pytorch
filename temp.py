@@ -2,8 +2,12 @@ import torch
 import numpy as np
 from torch.nn import functional as F
 from configs import *
-from model import pretrian_model
+# from model import pretrian_model
 from batch import BatchManager
+
+from pre_trainer import get_feats
+
+from sklearn.preprocessing import normalize
 
 class handcraft_model():
     def __init__(self,lr , batch_manager):
@@ -92,22 +96,22 @@ def pre_test(model,batchmanager):
 
 
 if __name__ == "__main__":
-    rmse = []
+    # rmse = []
     batchmanager = BatchManager('movielens-100k')
-    model = pretrian_model(batchmanager)
-    optomizer = torch.optim.Adam([model.u_feat,model.i_feat],lr=PRE_LEARNING_RATE, weight_decay=1e-5)
-    train_data = torch.from_numpy(batchmanager.train_data)
-    u = torch.as_tensor(train_data[:,0],dtype=torch.long)
-    i = torch.as_tensor(train_data[:,1],dtype=torch.long)
-    r = torch.as_tensor(train_data[:,2],dtype=torch.float32)
-    for epoch in range(3000):
-        loss_train,_ = model(u, i, r)
-        optomizer.zero_grad()
-        loss_train.backward()
-        optomizer.step()
-        RMSE = pre_test(model,batchmanager)
-        rmse.append(np.array(RMSE.detach()))
-    np.save("rmse",rmse)
+    # model = pretrian_model(batchmanager)
+    # optomizer = torch.optim.Adam([model.u_feat,model.i_feat],lr=PRE_LEARNING_RATE, weight_decay=1e-5)
+    # train_data = torch.from_numpy(batchmanager.train_data)
+    # u = torch.as_tensor(train_data[:,0],dtype=torch.long)
+    # i = torch.as_tensor(train_data[:,1],dtype=torch.long)
+    # r = torch.as_tensor(train_data[:,2],dtype=torch.float32)
+    # for epoch in range(3000):
+    #     loss_train,_ = model(u, i, r)
+    #     optomizer.zero_grad()
+    #     loss_train.backward()
+    #     optomizer.step()
+    #     RMSE = pre_test(model,batchmanager)
+    #     rmse.append(np.array(RMSE.detach()))
+    # np.save("rmse",rmse)
     # train_data = batchmanager.train_data
     # u = train_data[:, 0]
     # i = train_data[:, 1]
@@ -121,11 +125,17 @@ if __name__ == "__main__":
     #     model_hand.train(u,i,r)
     #     rmse = model_hand.eval(test_u, test_i, test_r)
     #     print("epoch:{} rmse:{}".format(idx, rmse))
-
-
-
-
-
+    # train_data = np.array(batchmanager.train_data)
+    # train_user_ids = train_data[:, 0].astype(np.int64)
+    # train_item_ids = train_data[:, 1].astype(np.int64)
+    f_u,f_i = get_feats("movielens-100k")
+    # user_id = 0
+    # item_id = 50
+    # k = np.multiply(f_u[user_id][train_user_ids],
+    #                 f_i[item_id][train_item_ids])
+    n_f_u = normalize(f_u)
+    cos = np.matmul(n_f_u,n_f_u.T)
+    print(cos[10:20][:10])
 
 
 

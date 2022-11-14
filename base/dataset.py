@@ -4,6 +4,7 @@ import random
 import numpy as np
 
 # from ..configs import *
+import torch
 
 
 def _make_dir_if_not_exists(path):

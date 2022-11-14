@@ -31,12 +31,13 @@ class pretrian_model(torch.nn.Module):
         i_lookup = F.embedding(i,self._i_feat)
         r_hat = torch.sum(torch.multiply(u_lookup,i_lookup),1)
 
-        MSE = torch.nn.MSELoss()
-        rmse = torch.sqrt(MSE(r_hat, r))
+        MSE = torch.sum(torch.square(r_hat - r))
+
+        rmse = torch.sqrt(torch.mean(torch.square(r_hat - r)))
 
         reg_loss = torch.add(torch.sum(torch.square(self._u_feat))
                             , torch.sum(torch.square(self._i_feat)))
-        loss = MSE(r_hat, r) + PRE_LAMBDA*reg_loss
+        loss = MSE + PRE_LAMBDA*reg_loss
         return loss,rmse
 def pre_test(model,batchmanager):
     test_data = torch.from_numpy(batchmanager.test_data)
