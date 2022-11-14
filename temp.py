@@ -128,14 +128,14 @@ if __name__ == "__main__":
     # train_data = np.array(batchmanager.train_data)
     # train_user_ids = train_data[:, 0].astype(np.int64)
     # train_item_ids = train_data[:, 1].astype(np.int64)
-    f_u,f_i = get_feats("movielens-100k")
+    f_u,f_i = get_feats("movielens-1m")
     # user_id = 0
     # item_id = 50
     # k = np.multiply(f_u[user_id][train_user_ids],
     #                 f_i[item_id][train_item_ids])
-    n_f_u = normalize(f_u)
-    cos = np.matmul(n_f_u,n_f_u.T)
-    print(cos[10:20][:10])
+    # n_f_u = normalize(f_u)
+    # cos = np.matmul(n_f_u,n_f_u.T)
+    # print(cos[10:20][:10])
 
 
 

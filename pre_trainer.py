@@ -6,6 +6,7 @@ from configs import *
 from model import pretrian_model
 
 def _eval(batch_manager, model):
+    '''eval the pretrain model'''
     model.eval()
     valid_data = batch_manager.valid_data
     _,valid_rmse = model(valid_data[:,0],
@@ -22,6 +23,10 @@ def _eval(batch_manager, model):
     return valid_rmse, test_rmse
 
 def get_feats(kind,use_cache=True):
+    '''
+       get pretrained latent feature to meature the distance
+       between users and among items
+    '''
     if use_cache:
         try:
             feat_u = np.load('features/{}-feat_u.npy'.format(kind))
@@ -50,20 +55,25 @@ def get_feats(kind,use_cache=True):
     r = torch.as_tensor(train_data[:, 2],dtype=torch.float32)
 
     #initialize optimizer
-    opti = torch.optim.Adam([model.get_u_feat(),model.get_i_feat()],lr=PRE_LEARNING_RATE)
+    opt1 = torch.optim.SGD([model.get_u_feat()], lr=PRE_LEARNING_RATE, momentum=0.9)
+    opt2 = torch.optim.SGD([model.get_i_feat()], lr=PRE_LEARNING_RATE, momentum=0.9)
 
     #train
     model.train()
     for idx in range(10000):
-        loss,rmse = model(u,i,r)
-        opti.zero_grad()
+        loss, _ = model(u, i, r)
+        opt1.zero_grad()
         loss.backward()
-        opti.step()
+        opt1.step()
 
+        loss, rmse = model(u, i, r)
+        opt2.zero_grad()
+        loss.backward()
+        opt2.step()
         valid_rmse, test_rmse = _eval(batch_manager,model)
         if idx > min_valid_iter + 100:
             break
-        if min_valid_rmse > valid_rmse:
+        if min_valid_rmse > valid_rmse + PRE_THRESHOLD:
             min_valid_rmse = valid_rmse
             min_valid_iter = idx
             final_test_rmse = test_rmse
