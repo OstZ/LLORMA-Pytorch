@@ -1,13 +1,16 @@
 import torch
 import numpy as np
 from torch.nn import functional as F
-from configs import *
-# from model import pretrian_model
-from batch import BatchManager
 
+from base.dataset import DatasetManager
+from configs import *
+from model import PretrianModel, BaseModel
+from batch import BatchManager
+from anchor import AnchorManager
 from pre_trainer import get_feats
 
 from sklearn.preprocessing import normalize
+from trainer import main as llorma_local_train
 
 class handcraft_model():
     def __init__(self,lr , batch_manager):
@@ -97,10 +100,10 @@ def pre_test(model,batchmanager):
 
 if __name__ == "__main__":
     # rmse = []
-    batchmanager = BatchManager('movielens-100k')
+    # batchmanager = BatchManager('movielens-1m')
     # model = pretrian_model(batchmanager)
-    # optomizer = torch.optim.Adam([model.u_feat,model.i_feat],lr=PRE_LEARNING_RATE, weight_decay=1e-5)
-    # train_data = torch.from_numpy(batchmanager.train_data)
+    # # optomizer = torch.optim.Adam([model.u_feat,model.i_feat],lr=PRE_LEARNING_RATE, weight_decay=1e-5)
+    # train_data = batchmanager.train_data
     # u = torch.as_tensor(train_data[:,0],dtype=torch.long)
     # i = torch.as_tensor(train_data[:,1],dtype=torch.long)
     # r = torch.as_tensor(train_data[:,2],dtype=torch.float32)
@@ -128,7 +131,26 @@ if __name__ == "__main__":
     # train_data = np.array(batchmanager.train_data)
     # train_user_ids = train_data[:, 0].astype(np.int64)
     # train_item_ids = train_data[:, 1].astype(np.int64)
-    f_u,f_i = get_feats("movielens-1m")
+    # f_u,f_i = get_feats("movielens-1m")
+    # anchormanager = AnchorManager(batchmanager,
+    #                               f_u,
+    #                               f_i)
+    # basemodel = BaseModel(batchmanager)
+    # basemodel.set_feats(f_u, f_i)
+    # opti = torch.optim.SGD([i for i in basemodel.get_feats()],
+    #                        lr=PRE_LEARNING_RATE,
+    #                        momentum=0.9)
+    # anchoridx = 0
+    # train_k = anchormanager.get_train_k(anchoridx)
+    # basemodel.train()
+    # for iter in range(1000):
+    #     opti.zero_grad()
+    #     local_loss, r_hat, SSE = basemodel(u, i, r, train_k)
+    #     local_loss.backward()
+    #     opti.step()
+    #     print("epoch:{} rmse:{}".format(iter, torch.sqrt(SSE)))
+
+    # f_u = np.
     # user_id = 0
     # item_id = 50
     # k = np.multiply(f_u[user_id][train_user_ids],
@@ -136,6 +158,15 @@ if __name__ == "__main__":
     # n_f_u = normalize(f_u)
     # cos = np.matmul(n_f_u,n_f_u.T)
     # print(cos[10:20][:10])
+    # kind = DatasetManager.KIND_MOVIELENS_100K
+    kind = DatasetManager.KIND_MOVIELENS_1M
+    # kind = DatasetManager.KIND_MOVIELENS_10M
+    # kind = DatasetManager.KIND_MOVIELENS_20M
+
+    llorma_local_train(kind)
+    # llorma_global_train(kind)
+
+
 
 
 

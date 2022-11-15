@@ -1,9 +1,10 @@
 import random
 
 import numpy as np
+import torch
 from sklearn.preprocessing import normalize
 
-from .configs import *
+from configs import *
 
 
 def _init_anchor_points(train_data, row_k, col_k):
@@ -22,6 +23,7 @@ def _init_anchor_points(train_data, row_k, col_k):
 
         k = np.multiply(row_k[user_id][train_user_ids],
                         col_k[item_id][train_item_ids])
+        #drop anchor that too far away from train pairs
         sum_a_of_anchor = np.sum(k)
         if sum_a_of_anchor < 1:
             continue
@@ -33,7 +35,10 @@ def _init_anchor_points(train_data, row_k, col_k):
 
 
 def _get_distance_matrix(latent):
-    ''''''
+    '''
+        get arccos matrix, store distance between vectors
+        shape of (len(latent),len(latent))
+    '''
     _normalized_latent = normalize(latent, axis=1)
     # print(_normalized_latent.shape)
 
@@ -45,12 +50,23 @@ def _get_distance_matrix(latent):
 
 
 def _get_k_from_distance(d):
+    '''
+        get kernel matrix,store K_h(i,j) in corresponding position
+        shape of d
+    '''
+    #define the mask
     m = np.zeros(d.shape)
     m[d < 0.8] = 1
+    #Epanechnikov kernel with indicator
     return np.multiply(np.subtract(np.ones(d.shape), np.square(d)), m)
 
 
 def _get_ks_from_latents(row_latent, col_latent):
+    '''
+    :param row_latent: latent features of u
+    :param col_latent: latent features of i
+    :return: two kernel matrix
+    '''
 
     # for i in range(row_latent.shape[0]):
     #     print(row_latent[i][:4])
@@ -68,20 +84,18 @@ def _get_ks_from_latents(row_latent, col_latent):
 class AnchorManager:
     def __init__(
             self,
-            session,
-            models,
             batch_manager,
-            row_latent_init,
-            col_latent_init, ):
+            feat_u,
+            feat_i, ):
 
-        train_data = batch_manager.train_data
+        train_data = np.array(batch_manager.train_data.detach())
 
-        row_latent = row_latent_init
-        col_latent = col_latent_init
+        latent_u = feat_u
+        latent_i = feat_i
 
-        row_k, col_k = _get_ks_from_latents(row_latent, col_latent)
+        u_k, i_k = _get_ks_from_latents(latent_u, latent_i)
 
-        anchor_idxs = _init_anchor_points(train_data, row_k, col_k)
+        anchor_idxs = _init_anchor_points(train_data, u_k, i_k)
         assert len(anchor_idxs) == N_ANCHOR
         # print(anchor_idxs)
         anchor_points = train_data[anchor_idxs]
@@ -92,19 +106,19 @@ class AnchorManager:
         self.anchor_idxs = anchor_idxs
         self.anchor_points = anchor_points
 
-        self.row_k = row_k
-        self.col_k = col_k
+        self.u_k = u_k
+        self.i_k = i_k
 
     def _get_k(self, anchor_idx, data):
-        row_k = self.row_k
-        col_k = self.col_k
+        row_k = self.u_k
+        col_k = self.i_k
         anchor_point = self.anchor_points[anchor_idx]
 
         user_id = int(anchor_point[0])
         item_id = int(anchor_point[1])
 
-        user_ids = data[:, 0].astype(np.int64)
-        item_ids = data[:, 1].astype(np.int64)
+        user_ids = data[:, 0]
+        item_ids = data[:, 1]
 
         return np.multiply(row_k[user_id][user_ids], col_k[item_id][item_ids])
 
